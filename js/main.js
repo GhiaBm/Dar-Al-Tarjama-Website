@@ -189,9 +189,14 @@
    */
   let preloader = select('#preloader');
   if (preloader) {
-    window.addEventListener('load', () => {
-      preloader.remove()
-    });
+    // Hide the spinner as soon as the page structure is ready (DOMContentLoaded),
+    // instead of waiting for every image to finish downloading (load).
+    const hidePreloader = () => preloader.remove();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', hidePreloader);
+    } else {
+      hidePreloader();
+    }
   }
 
   /**
@@ -323,14 +328,20 @@
   /**
    * Animation on scroll
    */
-  window.addEventListener('load', () => {
-    AOS.init({
-      duration: 1000,
-      easing: 'ease-in-out',
-      once: true,
-      mirror: false
-    })
+  // Start AOS early so sections are visible once the spinner is gone,
+  // then recalculate positions when images have finished loading.
+  const initAOS = () => AOS.init({
+    duration: 1000,
+    easing: 'ease-in-out',
+    once: true,
+    mirror: false
   });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAOS);
+  } else {
+    initAOS();
+  }
+  window.addEventListener('load', () => AOS.refresh());
 
   /**
    * Initiate Pure Counter 
